@@ -40,12 +40,10 @@ const ui = {
 
         const filtered = state.products.filter(p => p.category === state.currentCategory);
 
-        if (filtered.length === 0) {
-            container.innerHTML = '<div class="empty-state">No hay productos en esta categoría</div>';
-            return;
-        }
-
-        container.innerHTML = filtered.map(p => this.createProductCard(p)).join('');
+        container.innerHTML = `
+            <button class="primary-btn" onclick="ui.showProductModal()" style="margin-bottom:20px"> + Nuevo en ${state.currentCategory}</button>
+            ${filtered.length === 0 ? '<div class="empty-state">No hay productos aún</div>' : filtered.map(p => this.createProductCard(p)).join('')}
+        `;
     },
 
     createProductCard(p) {
@@ -107,7 +105,80 @@ const ui = {
             store.addIngredient(name, price, qty, unit);
             document.getElementById('cost-modal').style.display = 'none';
         }
-    }
+    },
+
+    showProductModal() {
+        const modal = document.getElementById('cost-modal');
+        const isResale = state.currentCategory === 'Chocolates';
+
+        modal.querySelector('.modal-content').innerHTML = `
+            <h3>Nuevo Producto (${state.currentCategory})</h3>
+            <input type="text" id="prod-name" placeholder="Nombre del producto">
+            
+            ${isResale ? `
+                <div style="display:flex; gap:10px; margin:15px 0">
+                    <input type="number" id="prod-price" placeholder="Precio Compra ($)">
+                    <input type="number" id="prod-qty" placeholder="Cant. Pack">
+                </div>
+                <input type="number" id="prod-packaging" placeholder="Costo Embalaje ($)">
+            ` : `
+                <div id="recipe-builder" style="margin:15px 0">
+                    <p style="font-size:12px; color:var(--text-secondary)">Selecciona ingredientes de tu biblioteca:</p>
+                    <div id="recipe-items"></div>
+                    <select id="recipe-ing-select" onchange="ui.addIngredientToRecipe(this.value)" style="width:100%; margin-top:10px">
+                        <option value="">+ Agregar Ingrediente</option>
+                        ${state.ingredients.map(ing => `<option value="${ing.id}">${ing.name}</option>`).join('')}
+                    </select>
+                </div>
+                <input type="number" id="prod-yield" placeholder="Rendimiento (ej. 70 unidades)">
+            `}
+            
+            <button onclick="ui.saveNewProduct()" class="primary-btn" style="margin-top:20px">Guardar Producto</button>
+            <button onclick="document.getElementById('cost-modal').style.display='none'" class="nav-item" style="width:100%; margin-top:15px">Cancelar</button>
+        `;
+
+        this.tempRecipe = [];
+        modal.style.display = 'flex';
+    },
+
+    addIngredientToRecipe(id) {
+        if (!id) return;
+        const ing = state.ingredients.find(i => i.id == id);
+        this.tempRecipe.push({ id: ing.id, name: ing.name, usedQty: 0 });
+        this.updateRecipeUI();
+        document.getElementById('recipe-ing-select').value = "";
+    },
+
+    updateRecipeUI() {
+        const container = document.getElementById('recipe-items');
+        container.innerHTML = this.tempRecipe.map((item, index) => `
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; background:rgba(255,255,255,0.05); padding:8px; border-radius:8px">
+                <span style="font-size:14px">${item.name}</span>
+                <input type="number" placeholder="Cant." style="width:60px; margin:0" oninput="ui.tempRecipe[${index}].usedQty = this.value">
+            </div>
+        `).join('');
+    },
+
+    saveNewProduct() {
+        const name = document.getElementById('prod-name').value;
+        const isResale = state.currentCategory === 'Chocolates';
+
+        let data = { name, category: state.currentCategory, type: isResale ? 'resale' : 'recipe' };
+
+        if (isResale) {
+            data.purchasePrice = document.getElementById('prod-price').value;
+            data.purchaseQty = document.getElementById('prod-qty').value;
+            data.packaging = document.getElementById('prod-packaging').value || 0;
+        } else {
+            data.ingredients = this.tempRecipe;
+            data.yield = document.getElementById('prod-yield').value;
+        }
+
+        if (name) {
+            store.addProduct(data);
+            document.getElementById('cost-modal').style.display = 'none';
+        }
+    },
 
     renderIngredients() {
         const container = document.getElementById('costs-list');
