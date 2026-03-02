@@ -38,6 +38,35 @@ header {
     align-items: center;
 }
 
+.category-bar {
+    display: flex;
+    overflow-x: auto;
+    padding: 0 20px 15px 20px;
+    gap: 10px;
+    scrollbar-width: none;
+}
+
+.category-bar::-webkit-scrollbar {
+    display: none;
+}
+
+.cat-btn {
+    background: var(--card-bg);
+    border: 1px solid var(--glass-border);
+    padding: 8px 16px;
+    border-radius: 20px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.cat-btn.active {
+    background: var(--accent-color);
+    color: white;
+    border-color: var(--accent-color);
+}
+
 h1 {
     font-size: 24px;
     font-weight: 700;
