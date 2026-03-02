@@ -31,6 +31,18 @@ const ui = {
     render() {
         if (state.view === 'dashboard') this.renderDashboard();
         if (state.view === 'ingredients') this.renderIngredients();
+
+        // Actualizar resumen superior
+        const summaryLabel = document.getElementById('summary-label');
+        const summaryValue = document.getElementById('summary-value');
+
+        if (state.view === 'dashboard') {
+            summaryLabel.textContent = "Total Productos";
+            summaryValue.textContent = state.products.length;
+        } else {
+            summaryLabel.textContent = "Total Ingredientes";
+            summaryValue.textContent = state.ingredients.length;
+        }
     },
 
     renderDashboard() {
